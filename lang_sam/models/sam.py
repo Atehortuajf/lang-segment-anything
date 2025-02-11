@@ -83,7 +83,7 @@ class SAM:
 
     def predict(self, image_rgb: np.ndarray, xyxy: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         self.predictor.set_image(image_rgb)
-        masks, scores, logits = self.predictor.predict(box=xyxy, multimask_output=False)
+        masks, scores, logits = self.predictor.predict(box=xyxy, multimask_output=True)
         if len(masks.shape) > 3:
             masks = np.squeeze(masks, axis=1)
         return masks, scores, logits
@@ -95,9 +95,9 @@ class SAM:
     ) -> tuple[list[np.ndarray], list[np.ndarray], list[np.ndarray]]:
         self.predictor.set_image_batch(images_rgb)
 
-        masks, scores, logits = self.predictor.predict_batch(box_batch=xyxy, multimask_output=False)
+        masks, scores, logits = self.predictor.predict_batch(box_batch=xyxy, multimask_output=True)
 
-        masks = [np.squeeze(mask, axis=1) if len(mask.shape) > 3 else mask for mask in masks]
+        masks = [mask.reshape(mask.shape[0]*mask.shape[1], mask.shape[2], mask.shape[3]) if len(mask.shape) > 3 else mask for mask in masks]
         scores = [np.squeeze(score) for score in scores]
-        logits = [np.squeeze(logit, axis=1) if len(logit.shape) > 3 else logit for logit in logits]
+        logits = [logit.reshape(logit.shape[0]*logit.shape[1], logit.shape[2], logit.shape[3]) if len(logit.shape) > 3 else logit for logit in logits]
         return masks, scores, logits
